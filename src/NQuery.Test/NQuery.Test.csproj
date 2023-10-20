@@ -19,6 +19,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\main\NQuery\NQuery.csproj" />
+      <ProjectReference Include="..\NQuery\NQuery.csproj" />
     </ItemGroup>
 
 </Project>
