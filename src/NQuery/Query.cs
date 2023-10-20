@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Concurrent;
+using System.Text.Json;
 using StackExchange.Redis;
 using ArgumentNullException = System.ArgumentNullException;
 
@@ -48,14 +49,14 @@ public class Query
         };
     }
 
-    public async Task<TOutput?> QueryAsync<TOutput>(string key, Func<Task<TOutput>> query)
+    public async Task<TOutput?> QueryAsync<TOutput>(string key, Func<Task<TOutput?>> query)
     {
         return _configuration.UseInMemory
             ? await InMemoryQuery(key, query)
             : await ExternalQuery(key, query);
     }
     
-    public async Task<IEnumerable<TOutput>> QueryAsync<TOutput>(string key, Func<Task<IEnumerable<TOutput>>> query)
+    public async Task<IEnumerable<TOutput>?> QueryAsync<TOutput>(string key, Func<Task<IEnumerable<TOutput>>> query)
     {
         return _configuration.UseInMemory
             ? await InMemoryQuery(key, query)
@@ -98,22 +99,44 @@ public class Query
 
         return rstLst;
     }
-    
-    private async Task<TOutput> ExternalQuery<TOutput>(string key, Func<Task<TOutput>> query)
+    private async Task<TOutput?> ExternalQuery<TOutput>(string key, Func<Task<TOutput>> query)
     {
         // check if key is already set
-        if (_memoryDb.TryGetValue(key, out var value))
+        var exist = await _redisDb.StringGetAsync(new RedisKey(key));
+        if (!exist.IsNull)
         {
-            return (TOutput)value;
+            return JsonSerializer.Deserialize<TOutput>(exist!);
         }
 
         // key not set 
         var rst = await query();
         if (rst is null) return rst;
-
-        _memoryDb[key] = rst;
-        OnInserted?.Invoke(this, new QueryEventArgs { Key = key });
-
+        
+        await _redisDb.StringSetAsync(
+            key, 
+            JsonSerializer.Serialize(rst), 
+            TimeSpan.FromMinutes(_configuration.CacheDuration));
         return rst;
     } 
+    
+    private async Task<IEnumerable<TOutput>> ExternalQuery<TOutput>(string key, Func<Task<IEnumerable<TOutput>>> query)
+    {
+        // check if key is already set
+        var exist = await _redisDb.StringGetAsync(new RedisKey(key));
+        if (!exist.IsNull)
+        {
+            return JsonSerializer.Deserialize<IEnumerable<TOutput>>(exist);
+        }
+
+        // key not set 
+        var rst = await query();
+        var rstLst = rst.ToList();
+        if(rstLst.Count == 0) return rstLst;
+        
+        await _redisDb.StringSetAsync(
+            key, 
+            JsonSerializer.Serialize(rstLst), 
+            TimeSpan.FromMinutes(_configuration.CacheDuration));
+        return rstLst;
+    }
 }

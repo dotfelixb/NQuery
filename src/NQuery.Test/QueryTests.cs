@@ -14,7 +14,7 @@ public class QueryTests
     public async Task Setup()
     {
         query = Query.Create(configuration);
-        playerDatabase  = new();
+        playerDatabase  = new PlayerDatabase();
         
         var player = new Player
         {
