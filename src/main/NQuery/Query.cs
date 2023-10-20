@@ -1,45 +1,71 @@
+using System.Collections;
 using System.Collections.Concurrent;
+using StackExchange.Redis;
 using ArgumentNullException = System.ArgumentNullException;
 
 namespace NQuery;
 
 public class Query
 {
-    private readonly ConcurrentDictionary<string, object> _data = new();
-    private readonly QueryConfiguration _queryConfiguration;
+    private readonly ConcurrentDictionary<string, object> _memoryDb;
+    private readonly QueryConfiguration _configuration;
+    private readonly IDatabase _redisDb;
 
-
-    event EventHandler<QueryEventArgs> OnInserted;
+    private event EventHandler<QueryEventArgs> OnInserted;
 
     private Query(QueryConfiguration queryConfiguration)
     {
-        _queryConfiguration = queryConfiguration; 
+        _memoryDb = new ConcurrentDictionary<string, object>();
+        _configuration = queryConfiguration;
+        var queryEvents = new QueryEvents(_memoryDb, _configuration);
+        OnInserted += queryEvents.Run;
+    }
+
+    private Query(QueryConfiguration queryConfiguration, IConnectionMultiplexer connectionMultiplexer)
+    {
+        _configuration = queryConfiguration;
+        _redisDb = connectionMultiplexer.GetDatabase();
     }
 
     public static Query Create(QueryConfiguration configuration)
     {
+        ArgumentNullException.ThrowIfNull(configuration);
+
         // pre-check
         if (configuration is { UseInMemory: false, RedisConfiguration: null })
         {
             throw new ArgumentException("RedisConfiguration required if not using InMemory Query Cache");
         }
 
-
-        var query = new Query(configuration);
-        var queryEvents = new QueryEvents(query._data, configuration);
-        query.OnInserted += queryEvents.Run;
-        return query;
-    }
-
-    public Task QueryAsync()
-    {
-        return Task.CompletedTask;
+        return configuration switch
+        {
+            { UseInMemory: true, RedisConfiguration: null }
+                => new Query(configuration),
+            { UseInMemory: false, RedisConfiguration: not null }
+                => new Query(configuration, ConnectionMultiplexer.Connect(configuration.RedisConfiguration.Endpoint)),
+            _
+                => throw new ArgumentException("Can't initialize NQuery")
+        };
     }
 
     public async Task<TOutput?> QueryAsync<TOutput>(string key, Func<Task<TOutput>> query)
     {
+        return _configuration.UseInMemory
+            ? await InMemoryQuery(key, query)
+            : await ExternalQuery(key, query);
+    }
+    
+    public async Task<IEnumerable<TOutput>> QueryAsync<TOutput>(string key, Func<Task<IEnumerable<TOutput>>> query)
+    {
+        return _configuration.UseInMemory
+            ? await InMemoryQuery(key, query)
+            : await ExternalQuery(key, query);
+    }
+
+    private async Task<TOutput> InMemoryQuery<TOutput>(string key, Func<Task<TOutput>> query)
+    {
         // check if key is already set
-        if (_data.TryGetValue(key, out var value))
+        if (_memoryDb.TryGetValue(key, out var value))
         {
             return (TOutput)value;
         }
@@ -48,9 +74,46 @@ public class Query
         var rst = await query();
         if (rst is null) return rst;
 
-        _data[key] = rst;
+        _memoryDb[key] = rst;
         OnInserted?.Invoke(this, new QueryEventArgs { Key = key });
 
         return rst;
+    } 
+
+    private async Task<IEnumerable<TOutput>> InMemoryQuery<TOutput>(string key, Func<Task<IEnumerable<TOutput>>> query)
+    {
+        // check if key is already set
+        if (_memoryDb.TryGetValue(key, out var value))
+        {
+            return (IEnumerable<TOutput>)value;
+        }
+
+        // key not set 
+        var rst = await query();
+        var rstLst = rst.ToList();
+        if (rstLst.Count == 0) return rstLst;
+
+        _memoryDb[key] = rst;
+        OnInserted?.Invoke(this, new QueryEventArgs { Key = key });
+
+        return rstLst;
     }
+    
+    private async Task<TOutput> ExternalQuery<TOutput>(string key, Func<Task<TOutput>> query)
+    {
+        // check if key is already set
+        if (_memoryDb.TryGetValue(key, out var value))
+        {
+            return (TOutput)value;
+        }
+
+        // key not set 
+        var rst = await query();
+        if (rst is null) return rst;
+
+        _memoryDb[key] = rst;
+        OnInserted?.Invoke(this, new QueryEventArgs { Key = key });
+
+        return rst;
+    } 
 }
