@@ -1,34 +1,33 @@
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Text.Json;
-using StackExchange.Redis;
-using ArgumentNullException = System.ArgumentNullException;
+using NQuery.Interfaces;
+using StackExchange.Redis; 
 
 namespace NQuery;
 
-public class Query
+public class NQuery : INQuery
 {
     private readonly ConcurrentDictionary<string, object> _memoryDb;
-    private readonly QueryConfiguration _configuration;
+    private readonly NQueryConfiguration _configuration;
     private readonly IDatabase _redisDb;
 
     private event EventHandler<QueryEventArgs> OnInserted;
 
-    private Query(QueryConfiguration queryConfiguration)
+    private NQuery(NQueryConfiguration nQueryConfiguration)
     {
         _memoryDb = new ConcurrentDictionary<string, object>();
-        _configuration = queryConfiguration;
-        var queryEvents = new QueryEvents(_memoryDb, _configuration);
+        _configuration = nQueryConfiguration;
+        var queryEvents = new NQueryEvents(_memoryDb, _configuration);
         OnInserted += queryEvents.Run;
     }
 
-    private Query(QueryConfiguration queryConfiguration, IConnectionMultiplexer connectionMultiplexer)
+    private NQuery(NQueryConfiguration nQueryConfiguration, IConnectionMultiplexer connectionMultiplexer)
     {
-        _configuration = queryConfiguration;
+        _configuration = nQueryConfiguration;
         _redisDb = connectionMultiplexer.GetDatabase();
     }
 
-    public static Query Create(QueryConfiguration configuration)
+    public static NQuery Create(NQueryConfiguration configuration)
     {
         ArgumentNullException.ThrowIfNull(configuration);
 
@@ -41,29 +40,29 @@ public class Query
         return configuration switch
         {
             { UseInMemory: true, RedisConfiguration: null }
-                => new Query(configuration),
+                => new NQuery(configuration),
             { UseInMemory: false, RedisConfiguration: not null }
-                => new Query(configuration, ConnectionMultiplexer.Connect(configuration.RedisConfiguration.Endpoint)),
+                => new NQuery(configuration, ConnectionMultiplexer.Connect(configuration.RedisConfiguration.Endpoint)),
             _
                 => throw new ArgumentException("Can't initialize NQuery")
         };
     }
 
-    public async Task<TOutput?> QueryAsync<TOutput>(string key, Func<Task<TOutput?>> query)
+    public async Task<TOutput?> QueryAsync<TOutput>(string key, Func<Task<TOutput?>> query, CancellationToken cancellationToken = default)
     {
         return _configuration.UseInMemory
-            ? await InMemoryQuery(key, query)
-            : await ExternalQuery(key, query);
+            ? await InMemoryQuery(key, query, cancellationToken)
+            : await ExternalQuery(key, query, cancellationToken);
     }
     
-    public async Task<IEnumerable<TOutput>?> QueryAsync<TOutput>(string key, Func<Task<IEnumerable<TOutput>>> query)
+    public async Task<IEnumerable<TOutput>> QueryAsync<TOutput>(string key, Func<Task<IEnumerable<TOutput>>> query, CancellationToken cancellationToken = default)
     {
         return _configuration.UseInMemory
-            ? await InMemoryQuery(key, query)
-            : await ExternalQuery(key, query);
+            ? await InMemoryQuery(key, query, cancellationToken)
+            : await ExternalQuery(key, query, cancellationToken);
     }
 
-    private async Task<TOutput> InMemoryQuery<TOutput>(string key, Func<Task<TOutput>> query)
+    private async Task<TOutput> InMemoryQuery<TOutput>(string key, Func<Task<TOutput>> query, CancellationToken cancellationToken)
     {
         // check if key is already set
         if (_memoryDb.TryGetValue(key, out var value))
@@ -81,7 +80,7 @@ public class Query
         return rst;
     } 
 
-    private async Task<IEnumerable<TOutput>> InMemoryQuery<TOutput>(string key, Func<Task<IEnumerable<TOutput>>> query)
+    private async Task<IEnumerable<TOutput>> InMemoryQuery<TOutput>(string key, Func<Task<IEnumerable<TOutput>>> query, CancellationToken cancellationToken)
     {
         // check if key is already set
         if (_memoryDb.TryGetValue(key, out var value))
@@ -99,7 +98,7 @@ public class Query
 
         return rstLst;
     }
-    private async Task<TOutput?> ExternalQuery<TOutput>(string key, Func<Task<TOutput>> query)
+    private async Task<TOutput?> ExternalQuery<TOutput>(string key, Func<Task<TOutput>> query, CancellationToken cancellationToken)
     {
         // check if key is already set
         var exist = await _redisDb.StringGetAsync(new RedisKey(key));
@@ -119,7 +118,7 @@ public class Query
         return rst;
     } 
     
-    private async Task<IEnumerable<TOutput>> ExternalQuery<TOutput>(string key, Func<Task<IEnumerable<TOutput>>> query)
+    private async Task<IEnumerable<TOutput>> ExternalQuery<TOutput>(string key, Func<Task<IEnumerable<TOutput>>> query, CancellationToken cancellationToken)
     {
         // check if key is already set
         var exist = await _redisDb.StringGetAsync(new RedisKey(key));

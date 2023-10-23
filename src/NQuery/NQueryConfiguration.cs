@@ -1,9 +1,9 @@
 namespace NQuery;
 
-public class QueryConfiguration
+public class NQueryConfiguration
 {
-    public bool UseInMemory { get; init; } = false;
-    public int CacheDuration { get; init; } = 5000;
+    public bool UseInMemory { get; set; }  
+    public int CacheDuration { get; set; } = 5;
     public RedisConfiguration? RedisConfiguration { get; set; }
 }
 

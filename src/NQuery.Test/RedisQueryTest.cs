@@ -2,21 +2,22 @@ namespace NQuery.Test;
 
 public class RedisQueryTest
 {
-    private QueryConfiguration configuration = new()
+    private readonly NQueryConfiguration _configuration = new()
     {
-        CacheDuration = 1,
+        UseInMemory = false, // <-- change to false for this test
+        CacheDuration = 5,
         RedisConfiguration = new RedisConfiguration(new[]
         {
             new RedisEndpoint { Host = "localhost", Port = 6379 }
         })
     };
-    private Query query;
+    private NQuery _query;
     private PlayerDatabase playerDatabase;
     
     [SetUp]
-    public Task Setup()
+    public async Task Setup()
     {
-        query = Query.Create(configuration);
+        _query = NQuery.Create(_configuration);
         playerDatabase  = new PlayerDatabase();
         
         var player = new Player
@@ -24,8 +25,7 @@ public class RedisQueryTest
             UserName = "some-string",
             Lives = 1
         };
-
-        return Task.CompletedTask;
+        await _query.QueryAsync(player.UserName, async () => await playerDatabase.Insert(player.UserName, player));
     }
     
     [Test]
@@ -36,14 +36,14 @@ public class RedisQueryTest
             UserName = "some-string",
             Lives = 1
         }; 
-        var rst = await query.QueryAsync(player.UserName, async () => await playerDatabase.Insert(player.UserName, player));
+        var rst = await _query.QueryAsync(player.UserName, async () => await playerDatabase.Insert(player.UserName, player));
         Assert.That(rst?.Lives, Is.EqualTo(1));
     }
     
     [Test]
     public async Task GetKey()
     {
-        var rst = await query.QueryAsync(
+        var rst = await _query.QueryAsync(
             "some-string", 
             async () => await playerDatabase.Find("some-string"));
         Assert.That(rst?.Lives, Is.EqualTo(1));
@@ -57,8 +57,8 @@ public class RedisQueryTest
             new() { UserName = "some-string", Lives = 1 },
             new() { UserName = "some-string2", Lives = 2 },
         };
-        var rst = await query.QueryAsync(
-            "some-string", 
+        var rst = await _query.QueryAsync(
+            "some-list", 
             async () => await playerDatabase.Insert(players));
         Assert.That(rst.Count(), Is.EqualTo(2));
     }
