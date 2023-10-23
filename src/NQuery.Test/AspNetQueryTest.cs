@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using NQuery.Interfaces;
+using NQuery.Redis;
 
 namespace NQuery.Test;
 
@@ -12,11 +13,10 @@ public class AspNetQueryTest
     {
         _services.AddNQuery(cfg =>
         {
-            // cfg.RedisConfiguration = new RedisConfiguration(new[]
-            // {
-            //     new RedisEndpoint { Host = "localhost", Port = 6379 }
-            // });
-            cfg.UseInMemory = true;
+            cfg.UseRedis(opts =>
+            {
+                opts.Endpoints.Add(new RedisEndpoint() { Host = "localhost", Port = 6379 });
+            });
         }); 
     }
 

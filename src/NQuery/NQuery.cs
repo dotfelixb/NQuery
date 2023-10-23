@@ -35,17 +35,20 @@ public class NQuery : INQuery
         if (configuration is { UseInMemory: false, RedisConfiguration: null })
         {
             throw new ArgumentException("RedisConfiguration required if not using InMemory Query Cache");
+        } 
+
+        if (configuration is { UseInMemory: true })
+        {
+            return new NQuery(configuration);
         }
 
-        return configuration switch
+        var stackExchangeRedisConfig = new ConfigurationOptions { };
+        foreach (var endpoint in configuration.RedisConfiguration!.Endpoints)
         {
-            { UseInMemory: true, RedisConfiguration: null }
-                => new NQuery(configuration),
-            { UseInMemory: false, RedisConfiguration: not null }
-                => new NQuery(configuration, ConnectionMultiplexer.Connect(configuration.RedisConfiguration.Endpoint)),
-            _
-                => throw new ArgumentException("Can't initialize NQuery")
-        };
+            stackExchangeRedisConfig.EndPoints.Add(endpoint.Host, endpoint.Port);
+        } 
+
+        return new NQuery(configuration, ConnectionMultiplexer.Connect(stackExchangeRedisConfig));
     }
 
     public async Task<TOutput?> QueryAsync<TOutput>(string key, Func<Task<TOutput?>> query, CancellationToken cancellationToken = default)

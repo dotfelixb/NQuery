@@ -9,17 +9,20 @@ public class NQueryConfiguration
 
 public class RedisConfiguration
 {
-    public RedisConfiguration(string host, int port = 6379)
+
+    public RedisConfiguration() : this(Array.Empty<RedisEndpoint>())
     {
-        Endpoint = $"{host}:{port}";
     }
-
+    
     public RedisConfiguration(RedisEndpoint[] endpoints)
-    { 
-       Endpoint = string.Join(",", endpoints.Select(e => $"{e.Host}:{e.Port}"));
+    {
+        foreach (var endpoint in endpoints)
+        {
+            Endpoints.Add(endpoint);
+        }
     }
-
-    internal string Endpoint { get; } 
+    
+    public IList<RedisEndpoint> Endpoints { get; } = new List<RedisEndpoint>();
 }
 
 public class RedisEndpoint

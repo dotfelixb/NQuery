@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NQuery", "src\NQuery\NQuery
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NQuery.Test", "src\NQuery.Test\NQuery.Test.csproj", "{399483EE-13CB-4219-B826-6365B392B996}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NQuery.Redis", "src\NQuery.Redis\NQuery.Redis.csproj", "{70061A33-0DE2-448F-BCAA-A1C5B356F951}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -14,6 +16,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{24692AC7-1C2F-4A80-86D6-6D1FE49CCF1E} = {17E9145C-3A6D-4963-9A46-0A026704ECBD}
 		{399483EE-13CB-4219-B826-6365B392B996} = {17E9145C-3A6D-4963-9A46-0A026704ECBD}
+		{70061A33-0DE2-448F-BCAA-A1C5B356F951} = {17E9145C-3A6D-4963-9A46-0A026704ECBD}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{24692AC7-1C2F-4A80-86D6-6D1FE49CCF1E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -24,5 +27,9 @@ Global
 		{399483EE-13CB-4219-B826-6365B392B996}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{399483EE-13CB-4219-B826-6365B392B996}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{399483EE-13CB-4219-B826-6365B392B996}.Release|Any CPU.Build.0 = Release|Any CPU
+		{70061A33-0DE2-448F-BCAA-A1C5B356F951}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{70061A33-0DE2-448F-BCAA-A1C5B356F951}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{70061A33-0DE2-448F-BCAA-A1C5B356F951}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{70061A33-0DE2-448F-BCAA-A1C5B356F951}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

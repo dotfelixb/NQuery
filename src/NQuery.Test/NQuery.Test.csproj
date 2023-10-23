@@ -18,6 +18,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\NQuery.Redis\NQuery.Redis.csproj" />
       <ProjectReference Include="..\NQuery\NQuery.csproj" />
     </ItemGroup>
 
