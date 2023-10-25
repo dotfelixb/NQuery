@@ -32,7 +32,7 @@ jobs:
     - name: Test
       run: dotnet test --no-build --verbosity normal
     - name: Pack
-      run: dotnet pack --version-suffix alpha`date +%Y%m%d%H%M%S` -c Release -o ./nugetpkgs --no-build  
+      run: dotnet pack -c Release -o ./nugetpkgs --no-build  
     - name: Publish
       run: |
         for file in ./nugetpkgs/*.nupkg; do
