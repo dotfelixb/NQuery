@@ -35,6 +35,7 @@ jobs:
       run: dotnet pack -c Release -o ./nugetpkgs --no-build  
     - name: Publish
       run: |
-        for file in ./nugetpkgs/*.nupkg; do
-          dotnet nuget push $file --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate --source https://api.nuget.org/v3/index.json
+        for file in ./nugetpkgs/*.nupkg
+        do
+          dotnet nuget push $file -k ${{ secrets.NUGET_API_KEY }} --skip-duplicate -s https://www.nuget.org/api/v2/package
         done
