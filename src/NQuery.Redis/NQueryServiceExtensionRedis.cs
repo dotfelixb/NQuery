@@ -1,3 +1,5 @@
+using NQuery.Core;
+
 namespace NQuery.Redis;
 
 public static class NQueryServiceExtensionRedis

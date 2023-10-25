@@ -4,7 +4,7 @@
         <TargetFramework>net6.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <PackageId>NQuery</PackageId>
+        <PackageId>NQuery.Core</PackageId>
         <Authors>dotfelixb</Authors>
         <RepositoryUrl>https://github.com/dotfelixb/NQuery</RepositoryUrl>
         <ProjectUrl>https://github.com/dotfelixb/NQuery</ProjectUrl>
@@ -15,6 +15,8 @@
         <PackageTags>Query, Cache, Redis</PackageTags>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <PackageReadmeFile>README.md</PackageReadmeFile>
+        <AssemblyVersion></AssemblyVersion>
+        <Version>1.0.1</Version>
     </PropertyGroup>
 
     <ItemGroup>

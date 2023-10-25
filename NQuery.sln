@@ -2,7 +2,7 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{17E9145C-3A6D-4963-9A46-0A026704ECBD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NQuery", "src\NQuery\NQuery.csproj", "{24692AC7-1C2F-4A80-86D6-6D1FE49CCF1E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NQuery.Core", "src\NQuery.Core\NQuery.Core.csproj", "{24692AC7-1C2F-4A80-86D6-6D1FE49CCF1E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NQuery.Test", "src\NQuery.Test\NQuery.Test.csproj", "{399483EE-13CB-4219-B826-6365B392B996}"
 EndProject

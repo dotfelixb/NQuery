@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using NQuery.Core;
 using NQuery.Interfaces;
 using NQuery.Redis;
 

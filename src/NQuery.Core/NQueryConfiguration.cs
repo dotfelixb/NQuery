@@ -1,4 +1,4 @@
-namespace NQuery;
+namespace NQuery.Core;
 
 public class NQueryConfiguration
 {

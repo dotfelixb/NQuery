@@ -4,7 +4,7 @@ NQuery
 Simple caching layer for data fetching
 
 
-### Installing MediatR
+### Installing NQuery
 
 You can install [NQuery with NuGet](https://www.nuget.org/packages/NQuery.Redis):
 

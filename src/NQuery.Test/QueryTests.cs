@@ -1,3 +1,5 @@
+using NQuery.Core;
+
 namespace NQuery.Test;
 
 public class QueryTests
@@ -7,13 +9,13 @@ public class QueryTests
         UseInMemory = true,
         CacheDuration = 5000
     };
-    private NQuery _nQuery;
+    private Core.NQuery _nQuery;
     private PlayerDatabase playerDatabase;
 
     [SetUp]
     public async Task Setup()
     {
-        _nQuery = NQuery.Create(_configuration);
+        _nQuery = Core.NQuery.Create(_configuration);
         playerDatabase  = new PlayerDatabase();
         
         var player = new Player

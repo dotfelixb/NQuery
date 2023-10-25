@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 
-namespace NQuery;
+namespace NQuery.Core;
 
 internal class NQueryWorker
 {

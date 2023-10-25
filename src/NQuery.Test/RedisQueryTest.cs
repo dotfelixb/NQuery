@@ -1,3 +1,5 @@
+using NQuery.Core;
+
 namespace NQuery.Test;
 
 public class RedisQueryTest
@@ -11,13 +13,13 @@ public class RedisQueryTest
             new RedisEndpoint { Host = "127.0.0.1", Port = 6379 }
         })
     };
-    private NQuery _query;
+    private Core.NQuery _query;
     private PlayerDatabase playerDatabase;
     
     [SetUp]
     public async Task Setup()
     {
-        _query = NQuery.Create(_configuration);
+        _query = Core.NQuery.Create(_configuration);
         playerDatabase  = new PlayerDatabase();
         
         var player = new Player

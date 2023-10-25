@@ -15,10 +15,11 @@
         <PackageTags>Query, Cache, Redis</PackageTags>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <PackageReadmeFile>README.md</PackageReadmeFile>
+        <Version>1.0.1</Version>
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\NQuery\NQuery.csproj" />
+      <ProjectReference Include="..\NQuery.Core\NQuery.Core.csproj" />
     </ItemGroup>
 
     <ItemGroup>

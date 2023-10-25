@@ -1,9 +1,9 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
 using NQuery.Interfaces;
-using StackExchange.Redis; 
+using StackExchange.Redis;
 
-namespace NQuery;
+namespace NQuery.Core;
 
 public class NQuery : INQuery
 {

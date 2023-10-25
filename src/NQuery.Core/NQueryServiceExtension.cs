@@ -1,7 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
-using NQuery.Interfaces;
 
-namespace NQuery;
+namespace NQuery.Core;
 
 public static class NQueryServiceExtension
 {
@@ -18,7 +17,7 @@ public static class NQueryServiceExtension
         this IServiceCollection services,
         NQueryConfiguration configuration)
     {
-        services.AddSingleton<Interfaces.INQuery>(x => NQuery.Create(configuration));
+        services.AddSingleton<Interfaces.INQuery>(x => Core.NQuery.Create(configuration));
         return services;
     }
 }
