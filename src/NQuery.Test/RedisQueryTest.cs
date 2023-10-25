@@ -8,7 +8,7 @@ public class RedisQueryTest
         CacheDuration = 5,
         RedisConfiguration = new RedisConfiguration(new[]
         {
-            new RedisEndpoint { Host = "localhost", Port = 6379 }
+            new RedisEndpoint { Host = "127.0.0.1", Port = 6379 }
         })
     };
     private NQuery _query;

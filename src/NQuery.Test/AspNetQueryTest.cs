@@ -15,7 +15,7 @@ public class AspNetQueryTest
         {
             cfg.UseRedis(opts =>
             {
-                opts.Endpoints.Add(new RedisEndpoint() { Host = "localhost", Port = 6379 });
+                opts.Endpoints.Add(new RedisEndpoint() { Host = "127.0.0.1", Port = 6379 });
             });
         }); 
     }
