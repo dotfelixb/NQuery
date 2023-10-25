@@ -1,19 +1,28 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net6.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <PackageId>NQuery.Redis</PackageId>
         <Authors>dotfelixb</Authors>
         <RepositoryUrl>https://github.com/dotfelixb/NQuery</RepositoryUrl>
         <ProjectUrl>https://github.com/dotfelixb/NQuery</ProjectUrl>
-        <Description>A simple caching layer for data fetching</Description>
+        <Description>Simple caching layer for data fetching</Description>
         <LangVersion>Latest</LangVersion>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <PackageProjectUrl>https://github.com/dotfelixb/NQuery</PackageProjectUrl>
+        <PackageTags>Query, Cache, Redis</PackageTags>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\NQuery\NQuery.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="..\..\README.md" Pack="true" PackagePath="\"/>
     </ItemGroup>
 
 </Project>
