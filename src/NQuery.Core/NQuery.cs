@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
-using NQuery.Interfaces;
+using NQuery.Core.Interfaces;
 using StackExchange.Redis;
 
 namespace NQuery.Core;
@@ -35,37 +35,49 @@ public class NQuery : INQuery
         if (configuration is { UseInMemory: false, RedisConfiguration: null })
         {
             throw new ArgumentException("RedisConfiguration required if not using InMemory Query Cache");
-        } 
+        }
 
         if (configuration is { UseInMemory: true })
         {
             return new NQuery(configuration);
         }
 
-        var stackExchangeRedisConfig = new ConfigurationOptions { };
-        foreach (var endpoint in configuration.RedisConfiguration!.Endpoints)
+        var redisConfig = configuration.RedisConfiguration!;
+
+        var stackExchangeRedisConfig = new ConfigurationOptions
+        {
+            AbortOnConnectFail = redisConfig.AbortOnConnectFail,
+        };
+        foreach (var endpoint in redisConfig.Endpoints)
         {
             stackExchangeRedisConfig.EndPoints.Add(endpoint.Host, endpoint.Port);
-        } 
+        }
 
         return new NQuery(configuration, ConnectionMultiplexer.Connect(stackExchangeRedisConfig));
     }
 
-    public async Task<TOutput?> QueryAsync<TOutput>(string key, Func<Task<TOutput?>> query, CancellationToken cancellationToken = default)
+    public async Task<TOutput?> QueryAsync<TOutput>(string key, Func<Task<TOutput?>> query)
     {
         return _configuration.UseInMemory
-            ? await InMemoryQuery(key, query, cancellationToken)
-            : await ExternalQuery(key, query, cancellationToken);
-    }
-    
-    public async Task<IEnumerable<TOutput>> QueryAsync<TOutput>(string key, Func<Task<IEnumerable<TOutput>>> query, CancellationToken cancellationToken = default)
-    {
-        return _configuration.UseInMemory
-            ? await InMemoryQuery(key, query, cancellationToken)
-            : await ExternalQuery(key, query, cancellationToken);
+            ? await InMemoryQuery(key, query)
+            : await ExternalQuery(key, query);
     }
 
-    private async Task<TOutput> InMemoryQuery<TOutput>(string key, Func<Task<TOutput>> query, CancellationToken cancellationToken)
+    public async Task<IEnumerable<TOutput>> QueryAsync<TOutput>(string key, Func<Task<IEnumerable<TOutput>>> query)
+    {
+        return _configuration.UseInMemory
+            ? await InMemoryQuery(key, query)
+            : await ExternalQuery(key, query);
+    }
+
+    public async Task<TOutput?> MutationAsync<TOutput>(string key, Func<Task<TOutput?>> mutate)
+    {
+        return _configuration.UseInMemory
+            ? await InMemoryMutate(key, mutate)
+            : await ExternalMutate(key, mutate);
+    }
+
+    private async Task<TOutput> InMemoryQuery<TOutput>(string key, Func<Task<TOutput>> query)
     {
         // check if key is already set
         if (_memoryDb.TryGetValue(key, out var value))
@@ -81,9 +93,9 @@ public class NQuery : INQuery
         OnInserted?.Invoke(this, new QueryEventArgs { Key = key });
 
         return rst;
-    } 
+    }
 
-    private async Task<IEnumerable<TOutput>> InMemoryQuery<TOutput>(string key, Func<Task<IEnumerable<TOutput>>> query, CancellationToken cancellationToken)
+    private async Task<IEnumerable<TOutput>> InMemoryQuery<TOutput>(string key, Func<Task<IEnumerable<TOutput>>> query)
     {
         // check if key is already set
         if (_memoryDb.TryGetValue(key, out var value))
@@ -101,7 +113,19 @@ public class NQuery : INQuery
 
         return rstLst;
     }
-    private async Task<TOutput?> ExternalQuery<TOutput>(string key, Func<Task<TOutput>> query, CancellationToken cancellationToken)
+
+    private async Task<TOutput?> InMemoryMutate<TOutput>(string key, Func<Task<TOutput?>> mutate)
+    {
+        // check if key is already set
+        if (_memoryDb.ContainsKey(key))
+        {
+            _memoryDb.TryRemove(key, out var _);
+        }
+
+        return await mutate();
+    }
+
+    private async Task<TOutput?> ExternalQuery<TOutput>(string key, Func<Task<TOutput>> query)
     {
         // check if key is already set
         var exist = await _redisDb.StringGetAsync(new RedisKey(key));
@@ -113,15 +137,15 @@ public class NQuery : INQuery
         // key not set 
         var rst = await query();
         if (rst is null) return rst;
-        
+
         await _redisDb.StringSetAsync(
-            key, 
-            JsonSerializer.Serialize(rst), 
+            key,
+            JsonSerializer.Serialize(rst),
             TimeSpan.FromMinutes(_configuration.CacheDuration));
         return rst;
-    } 
-    
-    private async Task<IEnumerable<TOutput>> ExternalQuery<TOutput>(string key, Func<Task<IEnumerable<TOutput>>> query, CancellationToken cancellationToken)
+    }
+
+    private async Task<IEnumerable<TOutput>> ExternalQuery<TOutput>(string key, Func<Task<IEnumerable<TOutput>>> query)
     {
         // check if key is already set
         var exist = await _redisDb.StringGetAsync(new RedisKey(key));
@@ -133,12 +157,24 @@ public class NQuery : INQuery
         // key not set 
         var rst = await query();
         var rstLst = rst.ToList();
-        if(rstLst.Count == 0) return rstLst;
-        
+        if (rstLst.Count == 0) return rstLst;
+
         await _redisDb.StringSetAsync(
-            key, 
-            JsonSerializer.Serialize(rstLst), 
+            key,
+            JsonSerializer.Serialize(rstLst),
             TimeSpan.FromMinutes(_configuration.CacheDuration));
         return rstLst;
+    }
+
+    private async Task<TOutput?> ExternalMutate<TOutput>(string key, Func<Task<TOutput?>> mutate)
+    {
+        // check if key is already set
+        var exist = await _redisDb.StringGetAsync(new RedisKey(key));
+        if (!exist.IsNull)
+        {
+            await _redisDb.KeyDeleteAsync(new RedisKey(key));
+        }
+        
+        return await mutate();
     }
 }

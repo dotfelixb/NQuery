@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using NQuery.Core;
-using NQuery.Interfaces;
+using NQuery.Core.Interfaces;
 using NQuery.Redis;
 
 namespace NQuery.Test;
