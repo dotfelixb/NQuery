@@ -46,6 +46,10 @@ public class NQuery : INQuery
 
         var stackExchangeRedisConfig = new ConfigurationOptions
         {
+            Ssl = redisConfig.UseSsl, 
+            ConnectTimeout = redisConfig.ConnectTimeout, 
+            ResolveDns = redisConfig.ResolveDns,
+            Password = redisConfig.Password,
             AbortOnConnectFail = redisConfig.AbortOnConnectFail,
         };
         foreach (var endpoint in redisConfig.Endpoints)
@@ -141,7 +145,7 @@ public class NQuery : INQuery
         await _redisDb.StringSetAsync(
             key,
             JsonSerializer.Serialize(rst),
-            TimeSpan.FromMinutes(_configuration.CacheDuration));
+            _configuration.CacheDuration);
         return rst;
     }
 
@@ -162,7 +166,7 @@ public class NQuery : INQuery
         await _redisDb.StringSetAsync(
             key,
             JsonSerializer.Serialize(rstLst),
-            TimeSpan.FromMinutes(_configuration.CacheDuration));
+            _configuration.CacheDuration);
         return rstLst;
     }
 

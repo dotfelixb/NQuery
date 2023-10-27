@@ -7,7 +7,7 @@ public class MutationTest
     private readonly NQueryConfiguration _configuration = new()
     {
         UseInMemory = true,
-        CacheDuration = 5000
+        CacheDuration = TimeSpan.FromMinutes(5)
     };
     private Core.NQuery _nQuery;
     private PlayerDatabase playerDatabase;

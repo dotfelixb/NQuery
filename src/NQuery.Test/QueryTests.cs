@@ -7,7 +7,7 @@ public class QueryTests
     private readonly NQueryConfiguration _configuration = new()
     {
         UseInMemory = true,
-        CacheDuration = 5000
+        CacheDuration = TimeSpan.FromMinutes(5)
     };
     private Core.NQuery _nQuery;
     private PlayerDatabase playerDatabase;
@@ -37,7 +37,7 @@ public class QueryTests
     public async Task TestQueryAfterUpdate()
     { 
         playerDatabase.Update("some-string", new Player { UserName = "some-string", Lives = 2 });
-        Thread.Sleep(_configuration.CacheDuration + 1000);
+        Thread.Sleep(_configuration.CacheDuration);
         
         var rst = await _nQuery.QueryAsync("some-string", async () => await playerDatabase.Find("some-string"));
         Assert.That(rst?.Lives, Is.EqualTo(2));

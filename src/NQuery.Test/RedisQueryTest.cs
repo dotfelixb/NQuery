@@ -7,10 +7,10 @@ public class RedisQueryTest
     private readonly NQueryConfiguration _configuration = new()
     {
         UseInMemory = false, // <-- change to false for this test
-        CacheDuration = 5,
+        CacheDuration = TimeSpan.FromMinutes(5),
         RedisConfiguration = new RedisConfiguration(new[]
         {
-            new RedisEndpoint { Host = "127.0.0.1", Port = 6379 }
+            new RedisEndpoint { Host = "127.0.0.1", Port = 6379 },
         })
     };
     private Core.NQuery _query;
